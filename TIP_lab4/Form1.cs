@@ -1,52 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Windows.Forms;
 
 namespace TIP_lab4
 {
     public partial class Form1 : Form
     {
-        private Dictionary<string, string> dic;
+        private Dictionary<string, string> dictionary;
         private SortedSet<string> ss;
         public Form1()
         {
-            dic = new Dictionary<string, string>();
+            dictionary = new Dictionary<string, string>();
             ss = new SortedSet<string>();
             InitializeComponent();
             defaultmachineLoader();
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void addButton_Click(object sender, EventArgs e)
         {
             if (textBox3.Text != "" && textBox4.Text != "" && textBox5.Text != "" && textBox6.Text != "" && textBox7.Text != "" && textBox1.Text !="")
             {
                 try
-                {                       
-                    dic.Add(textBox3.Text + "," + textBox4.Text + "," + textBox5.Text, textBox6.Text + "," + textBox7.Text + "," + textBox1.Text);
+                {
+                    dictionary.Add(textBox3.Text + "," + textBox4.Text + "," + textBox5.Text, textBox6.Text + "," + textBox7.Text + "," + textBox1.Text);
                     listBox1.Items.Add(label1.Text + textBox3.Text + "," + textBox4.Text + "," + textBox5.Text + label4.Text + textBox6.Text + "," + textBox7.Text + "," + textBox1.Text + ")");
                 }
                 catch(ArgumentException){
                     return;
                 }
-                
             } else {
-                MessageBox.Show("Проверьте ввод данных! Какое-то поле пустое!");
+                MessageBox.Show("Обнаружено пустое поле. Проверьте ввод данных.");
             }
         }
 
-        private void button3_Click(object sender, EventArgs e)
+        private void removeButton_Click(object sender, EventArgs e)
         {
             if(listBox1.SelectedIndex != -1)
             {
                 string key = listBox1.SelectedItems[0].ToString();
                 var temp = key.Split(label4.Text);
                 key = temp[0].Replace(label1.Text, string.Empty);              
-                dic.Remove(key);              
+                dictionary.Remove(key);              
                 listBox1.Items.RemoveAt(listBox1.SelectedIndex);
             }
         }
 
-        private void button2_Click(object sender, EventArgs e)
+        private void translateButton_Click(object sender, EventArgs e)
         {
             textBox8.Text = "";
             string chain = textBox2.Text;
@@ -69,11 +69,11 @@ namespace TIP_lab4
                 {
                     return;
                 }
-                if (!dic.ContainsKey(key))
+                if (!dictionary.ContainsKey(key))
                 {
-                    MessageBox.Show("Нет такого перехода! " + key + " !!!");
-                    textBox8.Text += " X";
-                    label18.Text = "Не удачно";
+                    MessageBox.Show("Ошибка: неизвестный переход " + key + " !");
+                    textBox8.Text += "Ошибка";
+                    resultLabel.Text = "Ошибка преобразования";
                     return;
                 }
                 try
@@ -87,7 +87,7 @@ namespace TIP_lab4
                     return;
                 }
 
-                string value = dic[key];
+                string value = dictionary[key];
                 var temp = value.Split(",");
                 currentState = temp[0];
 
@@ -100,9 +100,9 @@ namespace TIP_lab4
                     }
                     catch (ArgumentOutOfRangeException)
                     {
-                        MessageBox.Show("Удаление из пустого стека!!! ");
-                        textBox8.Text += " X";
-                        label18.Text = "Не удачно";
+                        MessageBox.Show("Ошибка: удаление из пустого стека! ");
+                        textBox8.Text += "Ошибка";
+                        resultLabel.Text = "Ошибка преобразования";
                         return;
                     }
                 }
@@ -112,7 +112,7 @@ namespace TIP_lab4
                     st1 = temp[1] + st1;
                 }
                     
-                if (temp[2].Equals("`") != true)
+                if (!temp[2].Equals("`"))
                 {
                     Exitchain += temp[2];  
                     Exitchain1 += temp[2];  
@@ -120,8 +120,8 @@ namespace TIP_lab4
                 if (chain.Length == 1 && st1.Length == 0)
                 {
                     textBox8.Text += "(q" + currentState + "," + chain + "," + st + "," + Exitchain1 + ") -> ";
-                    textBox8.Text += "Все круто!";
-                    label18.Text = "Удачно";
+                    textBox8.Text += "Успешно";
+                    resultLabel.Text = "Успешно преобразовано";
                     return;
                 }
                 if(Exitchain1.Length !=0)
@@ -131,26 +131,53 @@ namespace TIP_lab4
             }
         }
 
-        private void button4_Click(object sender, EventArgs e)
+        private void clearButton_Click(object sender, EventArgs e)
         {
-            dic.Clear();
+            dictionary.Clear();
             listBox1.Items.Clear();
         }
 
         private void defaultmachineLoader()
         {
-            dic.Clear();
-            dic.Add("0,*,!", "0,!!*,`");
-            dic.Add("0,`,+", "0,`,+");
-            dic.Add("0,a,!", "0,`,a");
-            dic.Add("0,+,!", "0,!!+,`");
-            dic.Add("0,`,*", "0,`,*");
+            dictionary.Clear();
+            dictionary.Add("0,*,!", "0,!!*,`");
+            dictionary.Add("0,`,+", "0,`,+");
+            dictionary.Add("0,a,!", "0,`,a");
+            dictionary.Add("0,+,!", "0,!!+,`");
+            dictionary.Add("0,`,*", "0,`,*");
             listBox1.Items.Clear();
-            listBox1.Items.Add("(q0,*,!)  - > ( q0,!!*,`)");
-            listBox1.Items.Add("(q0,`,+)  - > ( q0,`,+)");
-            listBox1.Items.Add("(q0,a,!)  - > ( q0,`,a)");
-            listBox1.Items.Add("(q0,+,!)  - > ( q0,!!+,`)");
-            listBox1.Items.Add("(q0,`,`)  - > ( q0,`,*)");
+            listBox1.Items.Add("(q0,*,!)->(q0,!!*,`)");
+            listBox1.Items.Add("(q0,`,+)->(q0,`,+)");
+            listBox1.Items.Add("(q0,a,!)->(q0,`,a)");
+            listBox1.Items.Add("(q0,+,!)->(q0,!!+,`)");
+            listBox1.Items.Add("(q0,`,`)->(q0,`,*)");
+        }
+
+        private void loadDefaultAutomatButton_Click(object sender, EventArgs e)
+        {
+            defaultmachineLoader();
+        }
+
+        private void addFromFileButton_Click(object sender, EventArgs e)
+        {
+            string[] textAutomat = File.ReadAllLines(@"D:\" + filePath.Text);
+            dictionary.Clear();
+            listBox1.Items.Clear();
+            for (int i = 0; i < textAutomat.Length; i++)
+            {
+                addToDictionary(textAutomat[i]);
+                listBox1.Items.Add(textAutomat[i]);
+            }
+        }
+
+        private void addToDictionary(string text)
+        {
+            string text1 = text.Substring(2, text.IndexOf(')') - 2);
+            string text2buf = text.Substring(text.LastIndexOf('('));
+            string text2 = text2buf.Substring(2, text2buf.IndexOf(')') - 2);
+//            listBox1.Items.Add(text1);
+//            listBox1.Items.Add(text2);
+            dictionary.Add(text1, text2);
         }
     }
 }
